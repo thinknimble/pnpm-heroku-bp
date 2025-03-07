@@ -1,0 +1,9 @@
+#!/bin/bash
+# bin/detect: Determines if this buildpack should be used
+
+if [ -f "$1/package.json" ]; then
+  echo "Node.js with pnpm"
+  exit 0
+else
+  exit 1
+fi

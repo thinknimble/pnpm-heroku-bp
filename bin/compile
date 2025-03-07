@@ -1,0 +1,57 @@
+
+#!/bin/bash
+# bin/compile: Installs pnpm and runs package installation
+
+set -e
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+
+# Output helpful logging
+echo "-----> pnpm buildpack: Installing pnpm and dependencies"
+
+# Create necessary directories
+mkdir -p $CACHE_DIR
+mkdir -p $BUILD_DIR/.heroku/node
+mkdir -p $BUILD_DIR/.heroku/pnpm
+
+export PATH="$BUILD_DIR/.heroku/node/bin:$PATH"
+
+# Download and install Node.js if not already installed
+NODE_VERSION=$(node -v 2>/dev/null || echo "")
+if [ "$NODE_VERSION" == "" ]; then
+  echo "-----> Installing Node.js"
+  NODE_VERSION=$(cat $BUILD_DIR/package.json | grep '"node":' | head -n 1 | awk -F'"' '{print $4}' | sed 's/^v//')
+  if [ "$NODE_VERSION" == "" ]; then
+    NODE_VERSION="18.16.0"  # Default Node.js version if not specified
+  fi
+  
+  NODE_URL="https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
+  curl -s $NODE_URL -o node.tar.gz
+  tar -xzf node.tar.gz
+  mv node-v$NODE_VERSION-linux-x64/* $BUILD_DIR/.heroku/node
+  rm -rf node-v$NODE_VERSION-linux-x64 node.tar.gz
+  echo "-----> Node.js v$NODE_VERSION installed"
+fi
+
+# Install pnpm
+echo "-----> Installing pnpm"
+PNPM_VERSION=$(cat $BUILD_DIR/package.json | grep '"pnpm":' | head -n 1 | awk -F'"' '{print $4}' || echo "")
+if [ "$PNPM_VERSION" == "" ]; then
+  PNPM_VERSION="8.6.0"  # Default pnpm version if not specified
+fi
+
+npm install -g pnpm@$PNPM_VERSION
+echo "-----> pnpm v$PNPM_VERSION installed"
+
+# Install dependencies using pnpm
+echo "-----> Installing dependencies with pnpm"
+cd $BUILD_DIR
+pnpm install --prod --frozen-lockfile
+
+# Add pnpm to PATH during runtime
+echo "export PATH=\"\$HOME/.heroku/node/bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
+chmod +x $BUILD_DIR/.profile.d/nodejs.sh
+
+echo "-----> pnpm buildpack installation completed"

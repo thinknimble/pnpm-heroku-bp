@@ -1,0 +1,8 @@
+#!/bin/bash
+# bin/release: Provides default process types
+
+cat << EOF
+---
+default_process_types:
+  web: npm start
+EOF
