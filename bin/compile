@@ -1,4 +1,3 @@
-
 #!/bin/bash
 # bin/compile: Installs pnpm and runs package installation
 
@@ -48,7 +47,7 @@ echo "-----> pnpm v$PNPM_VERSION installed"
 # Install dependencies using pnpm
 echo "-----> Installing dependencies with pnpm"
 cd $BUILD_DIR
-pnpm install --prod --frozen-lockfile
+pnpm install --prod --no-frozen-lockfile
 
 # Add pnpm to PATH during runtime
 echo "export PATH=\"\$HOME/.heroku/node/bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
