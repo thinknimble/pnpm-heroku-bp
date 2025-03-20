@@ -28,10 +28,15 @@ if [ "$NODE_VERSION" == "" ]; then
   
   NODE_URL="https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
   curl -s $NODE_URL -o node.tar.gz
-  tar -xzf node.tar.gz
-  mv node-v$NODE_VERSION-linux-x64/* $BUILD_DIR/.heroku/node
-  rm -rf node-v$NODE_VERSION-linux-x64 node.tar.gz
-  echo "-----> Node.js v$NODE_VERSION installed"
+  if file node.tar.gz | grep -q 'gzip compressed data'; then
+    tar -xzf node.tar.gz
+    mv node-v$NODE_VERSION-linux-x64/* $BUILD_DIR/.heroku/node
+    rm -rf node-v$NODE_VERSION-linux-x64 node.tar.gz
+    echo "-----> Node.js v$NODE_VERSION installed"
+  else
+    echo "Error: Downloaded file is not in gzip format"
+    exit 1
+  fi
 fi
 
 # Install pnpm
